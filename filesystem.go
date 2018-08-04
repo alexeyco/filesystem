@@ -1,28 +1,38 @@
 package filesystem
 
+import "path/filepath"
+
 type Fs struct {
+	path string
 	root *Dir
 }
 
-func (fs *Fs) List() ([]Path, error) {
+func (fs *Fs) Root() string {
+	return fs.path
+}
+
+func (fs *Fs) List() (Paths, error) {
 	return fs.root.List()
 }
 
-func (fs *Fs) Dirs() ([]*Dir, error) {
+func (fs *Fs) Dirs() (Dirs, error) {
 	return fs.root.Dirs()
 }
 
-func (fs *Fs) Files() ([]File, error) {
+func (fs *Fs) Files() (Files, error) {
 	return fs.root.Files()
 }
 
 func Root(path string) (*Fs, error) {
-	root, err := newDir(path)
+	abs, err := filepath.Abs(path)
 	if err != nil {
 		return nil, err
 	}
 
-	return &Fs{
-		root: root,
-	}, nil
+	// TODO: check path is directory
+
+	fs := &Fs{path: abs}
+	fs.root = newDir(fs, nil, "")
+
+	return fs, nil
 }

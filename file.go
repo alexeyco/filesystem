@@ -1,7 +1,14 @@
 package filesystem
 
 import (
+	"fmt"
 	"path/filepath"
+)
+
+const (
+	FileTypeDefault = iota
+	FileTypeEditable
+	FileTypeImage
 )
 
 type File struct {
@@ -46,14 +53,43 @@ func (*File) Remove() error {
 	return nil
 }
 
+func (*File) Type() int {
+	return FileTypeDefault
+}
+
+type ErrFileNotFound struct {
+	path string
+}
+
+func (e ErrFileNotFound) Error() string {
+	return fmt.Sprintf("file %s not found", e.path)
+}
+
 type HandlerEachFile func(file *File)
 
-type Files []*File
+type Files map[string]*File
 
 func (f Files) Each(handler HandlerEachFile) {
 	for _, file := range f {
 		handler(file)
 	}
+}
+
+func (f Files) File(name string) (*File, error) {
+	var (
+		file *File
+		ok   bool
+		err  error
+	)
+
+	if file, ok = f[name]; !ok {
+		err = &ErrFileNotFound{
+			path: name,
+		}
+	}
+
+	return file, err
+
 }
 
 func newFile(parent *Dir, local string) *File {

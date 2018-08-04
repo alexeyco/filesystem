@@ -27,7 +27,7 @@ func (p Paths) Dirs() Dirs {
 	for _, path := range p {
 		if path.IsDir() {
 			d, _ := path.(*Dir)
-			dirs = append(dirs, d)
+			dirs[d.Name()] = d
 		}
 	}
 
@@ -39,8 +39,8 @@ func (p Paths) Files() Files {
 
 	for _, path := range p {
 		if path.IsFile() {
-			d, _ := path.(*File)
-			files = append(files, d)
+			f, _ := path.(*File)
+			files[f.Name()] = f
 		}
 	}
 

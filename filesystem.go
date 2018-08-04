@@ -19,8 +19,26 @@ func (fs *Fs) Dirs() (Dirs, error) {
 	return fs.root.Dirs()
 }
 
+func (fs *Fs) Dir(name string) (*Dir, error) {
+	dirs, err := fs.root.Dirs()
+	if err != nil {
+		return nil, err
+	}
+
+	return dirs.Dir(name)
+}
+
 func (fs *Fs) Files() (Files, error) {
 	return fs.root.Files()
+}
+
+func (fs *Fs) File(name string) (*File, error) {
+	files, err := fs.root.Files()
+	if err != nil {
+		return nil, err
+	}
+
+	return files.File(name)
 }
 
 func Root(path string) (*Fs, error) {

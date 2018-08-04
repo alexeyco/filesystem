@@ -99,6 +99,15 @@ func (d *Dir) Dirs() (Dirs, error) {
 	return d.dirs, nil
 }
 
+func (d *Dir) Dir(name string) (*Dir, error) {
+	dirs, err := d.Dirs()
+	if err != nil {
+		return nil, err
+	}
+
+	return dirs.Dir(name)
+}
+
 func (d *Dir) Files() (Files, error) {
 	d.muFiles.Lock()
 	defer d.muFiles.Unlock()
@@ -118,6 +127,15 @@ func (d *Dir) Files() (Files, error) {
 	return d.files, nil
 }
 
+func (d *Dir) File(name string) (*File, error) {
+	files, err := d.Files()
+	if err != nil {
+		return nil, err
+	}
+
+	return files.File(name)
+}
+
 func (d *Dir) Mkdir(name string) (*Dir, error) {
 	return &Dir{}, nil
 }
@@ -130,14 +148,38 @@ func (e ErrMustBeDirectory) Error() string {
 	return fmt.Sprintf("path %s must be directory", e.path)
 }
 
+type ErrDirNotFound struct {
+	path string
+}
+
+func (e ErrDirNotFound) Error() string {
+	return fmt.Sprintf("directory %s not found", e.path)
+}
+
 type HandlerEachDir func(dir *Dir)
 
-type Dirs []*Dir
+type Dirs map[string]*Dir
 
 func (d Dirs) Each(handler HandlerEachDir) {
 	for _, dir := range d {
 		handler(dir)
 	}
+}
+
+func (d Dirs) Dir(name string) (*Dir, error) {
+	var (
+		dir *Dir
+		ok  bool
+		err error
+	)
+
+	if dir, ok = d[name]; !ok {
+		err = &ErrDirNotFound{
+			path: name,
+		}
+	}
+
+	return dir, err
 }
 
 func newDir(fs *Fs, parent *Dir, local string) *Dir {

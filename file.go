@@ -10,7 +10,6 @@ import (
 type File struct {
 	parent *Dir   // parent directory
 	name   string // file name
-	path   string // path from root
 }
 
 // IsFile always true
@@ -35,7 +34,7 @@ func (f *File) Name() string {
 
 // Path returns file abs
 func (f *File) Path() string {
-	return f.path
+	return filepath.Join(f.Parent().Path(), f.name)
 }
 
 // abs returns file absolute abs
@@ -50,13 +49,16 @@ func (f *File) Rename(name string) error {
 	p.lock()
 	defer p.unlock()
 
+	return f.rename(name)
+}
+
+func (f *File) rename(name string) error {
 	oldName := f.abs()
-	newName := filepath.Join(p.abs(), name)
+	newName := filepath.Join(f.Parent().abs(), name)
 
 	err := os.Rename(oldName, newName)
 	if err != nil {
 		f.name = name
-		f.path = filepath.Join(f.Parent().Path(), name)
 	}
 
 	return err
@@ -67,12 +69,22 @@ func (f *File) Move(dir *Dir) error {
 	p := f.Parent()
 
 	p.lock()
-	dir.lock()
-
-	defer p.unlock()
 	defer dir.unlock()
+	dir.flush()
 
-	return nil
+	return f.move(dir)
+}
+
+func (f *File) move(dir *Dir) error {
+	oldName := f.abs()
+	newName := filepath.Join(dir.abs(), f.Name())
+
+	err := os.Rename(oldName, newName)
+	if err != nil {
+		f.parent = dir
+	}
+
+	return err
 }
 
 // Remove removes current file
@@ -82,6 +94,10 @@ func (f *File) Remove() error {
 	p.lock()
 	defer p.unlock()
 
+	return f.remove()
+}
+
+func (f *File) remove() error {
 	return os.RemoveAll(f.abs())
 }
 
@@ -129,6 +145,5 @@ func newFile(parent *Dir, local string) *File {
 	return &File{
 		parent: parent,
 		name:   local,
-		path:   filepath.Join(parent.path, local),
 	}
 }

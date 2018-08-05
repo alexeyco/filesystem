@@ -2,6 +2,7 @@ package filesystem
 
 import (
 	"os"
+	"path/filepath"
 	"testing"
 )
 
@@ -52,18 +53,18 @@ func TestFile_Rename(t *testing.T) {
 
 	file, err := fs.File("foo.txt")
 	if err != nil {
-		t.Error("Must not be errors", err)
+		t.Error(err)
 		return
 	}
 
 	if err := file.Rename("bar.txt"); err != nil {
-		t.Error("Must not be errors", err)
+		t.Error(err)
 		return
 	}
 
 	files, err := fs.Files()
 	if err != nil {
-		t.Error("Must not be errors", err)
+		t.Error(err)
 		return
 	}
 
@@ -75,13 +76,62 @@ func TestFile_Rename(t *testing.T) {
 
 	_, err = fs.File("bar.txt")
 	if err != nil {
-		t.Error("Must not be errors", err)
+		t.Error(err)
 	}
 }
 
 // TestFile_Move checks file move
 func TestFile_Move(t *testing.T) {
+	fs, err := getFsTmp()
+	if err != nil {
+		t.Error("Can't create temporary Fs root", err)
+		return
+	}
+	defer os.RemoveAll(fs.Abs())
 
+	mkDir(fs.Abs(), "foo")
+	mkDir(fs.Abs(), "bar")
+	mkFile(filepath.Join(fs.Abs(), "foo"), "baz.txt")
+
+	foo, err := fs.Dir("foo")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	bar, err := fs.Dir("foo")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	baz, err := foo.File("baz.txt")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	if err := baz.Move(bar); err != nil {
+		t.Error(err)
+		return
+	}
+
+	if baz.Parent() != bar {
+		t.Errorf("Parent must be \"%s\", not \"%s\"", bar.Name(), baz.Parent().Name())
+		return
+	}
+
+	p := filepath.Join(bar.Path(), baz.Name())
+	if baz.Path() != p {
+		t.Errorf("Path must be \"%s\", not \"%s\"", p, baz.Path())
+		return
+	}
+
+	_, err = bar.File("baz.txt")
+	if err != nil {
+		t.Error(err)
+		return
+	}
 }
 
 // TestFile_Remove checks file remove
@@ -98,18 +148,18 @@ func TestFile_Remove(t *testing.T) {
 
 	file, err := fs.File("bar.txt")
 	if err != nil {
-		t.Error("Must not be errors", err)
+		t.Error(err)
 		return
 	}
 
 	if err := file.Remove(); err != nil {
-		t.Error("Must not be errors", err)
+		t.Error(err)
 		return
 	}
 
 	files, err := fs.Files()
 	if err != nil {
-		t.Error("Must not be errors", err)
+		t.Error(err)
 		return
 	}
 

@@ -189,21 +189,21 @@ func (d Dirs) Each(handler HandlerEachDir) {
 	}
 }
 
+// Exists checks if nested directory exists
+func (d Dirs) Exists(name string) bool {
+	_, ok := d[name]
+	return ok
+}
+
 // Dir returns nested directory by name
 func (d Dirs) Dir(name string) (*Dir, error) {
-	var (
-		dir *Dir
-		ok  bool
-		err error
-	)
-
-	if dir, ok = d[name]; !ok {
-		err = &ErrDirNotFound{
+	if !d.Exists(name) {
+		return nil, &ErrDirNotFound{
 			path: name,
 		}
 	}
 
-	return dir, err
+	return d[name], nil
 }
 
 func newDir(fs *Fs, parent *Dir, local string) *Dir {

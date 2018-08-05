@@ -80,22 +80,21 @@ func (f Files) Each(handler HandlerEachFile) {
 	}
 }
 
+// Exists checks if nested file exists
+func (f Files) Exists(name string) bool {
+	_, ok := f[name]
+	return ok
+}
+
 // File returns file by name
 func (f Files) File(name string) (*File, error) {
-	var (
-		file *File
-		ok   bool
-		err  error
-	)
-
-	if file, ok = f[name]; !ok {
-		err = &ErrFileNotFound{
+	if !f.Exists(name) {
+		return nil, &ErrFileNotFound{
 			path: name,
 		}
 	}
 
-	return file, err
-
+	return f[name], nil
 }
 
 func newFile(parent *Dir, local string) *File {

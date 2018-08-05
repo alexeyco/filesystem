@@ -1,6 +1,9 @@
 package filesystem
 
-import "path/filepath"
+import (
+	"os"
+	"path/filepath"
+)
 
 // Fs filesystem object
 type Fs struct {
@@ -50,14 +53,25 @@ func (fs *Fs) File(name string) (*File, error) {
 
 // Root returns root directory
 func Root(path string) (*Fs, error) {
-	abs, err := filepath.Abs(path)
+	path, err := filepath.Abs(path)
 	if err != nil {
 		return nil, err
 	}
 
-	// TODO: check abs is directory
+	stat, err := os.Stat(path)
+	if os.IsNotExist(err) {
+		return nil, &ErrDirNotFound{
+			path: path,
+		}
+	}
 
-	fs := &Fs{abs: abs}
+	if !stat.IsDir() {
+		return nil, &ErrMustBeDirectory{
+			path: path,
+		}
+	}
+
+	fs := &Fs{abs: path}
 	fs.root = newDir(fs, nil, "")
 
 	return fs, nil

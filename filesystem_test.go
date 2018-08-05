@@ -29,7 +29,7 @@ func mkFile(root, name string) error {
 	return ioutil.WriteFile(name, []byte{}, os.ModePerm)
 }
 
-// TestFs_Abs check absolute path
+// TestFs_Abs check Fs absolute path
 func TestFs_Abs(t *testing.T) {
 	tmp, err := mkTmpDir()
 	if err != nil {
@@ -54,7 +54,7 @@ func TestFs_Abs(t *testing.T) {
 	}
 }
 
-// TestFs_List check list
+// TestFs_List check Fs list
 func TestFs_List(t *testing.T) {
 	fs, err := getFsTmp()
 	if err != nil {
@@ -79,7 +79,7 @@ func TestFs_List(t *testing.T) {
 	}
 }
 
-// TestFs_Dirs  tests directories count
+// TestFs_Dirs check Fs directories list
 func TestFs_Dirs(t *testing.T) {
 	fs, err := getFsTmp()
 	if err != nil {
@@ -104,6 +104,7 @@ func TestFs_Dirs(t *testing.T) {
 	}
 }
 
+// TestFs_DirNotFound check Fs.Dir() error
 func TestFs_DirNotFound(t *testing.T) {
 	fs, err := getFsTmp()
 	if err != nil {
@@ -130,6 +131,7 @@ func TestFs_DirNotFound(t *testing.T) {
 	}
 }
 
+// TestFs_DirOk check Fs.Dir()
 func TestFs_DirOk(t *testing.T) {
 	fs, err := getFsTmp()
 	if err != nil {
@@ -157,7 +159,7 @@ func TestFs_DirOk(t *testing.T) {
 	}
 }
 
-// TestFs_Files tests files count
+// TestFs_Files check Fs files list
 func TestFs_Files(t *testing.T) {
 	fs, err := getFsTmp()
 	if err != nil {
@@ -182,6 +184,7 @@ func TestFs_Files(t *testing.T) {
 	}
 }
 
+// TestFs_FileNotFound check Fs.File() error
 func TestFs_FileNotFound(t *testing.T) {
 	fs, err := getFsTmp()
 	if err != nil {
@@ -208,6 +211,7 @@ func TestFs_FileNotFound(t *testing.T) {
 	}
 }
 
+// TestFs_FileOk check Fs.File()
 func TestFs_FileOk(t *testing.T) {
 	fs, err := getFsTmp()
 	if err != nil {
@@ -235,7 +239,7 @@ func TestFs_FileOk(t *testing.T) {
 	}
 }
 
-// TestRoot_NotFound when trying to open a nonexistent directory, there must be an appropriate error
+// TestRoot_NotFound check wrong root error
 func TestRoot_NotFound(t *testing.T) {
 	_, err := Root("./wrong/directory")
 	if err == nil {
@@ -248,7 +252,7 @@ func TestRoot_NotFound(t *testing.T) {
 	}
 }
 
-// TestRoot_Ok only a directory can be a root
+// TestRoot_MustBeDirectory check wrong root error
 func TestRoot_MustBeDirectory(t *testing.T) {
 	tmp, err := mkTmpDir()
 	if err != nil {

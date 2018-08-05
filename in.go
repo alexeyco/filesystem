@@ -79,23 +79,67 @@ func (s *SeekerIn) File(path string) (*File, error) {
 }
 
 func (s *SeekerIn) Mkdir(path string) error {
-	path = filepath.Join(s.root, s.dir, path)
-	return os.MkdirAll(path, os.ModePerm)
+	if err := s.shouldNotBeExist(path); err != nil {
+		return err
+	}
+
+	return os.MkdirAll(filepath.Join(s.root, s.dir, path), os.ModePerm)
 }
 
 func (s *SeekerIn) Move(source, dest string) error {
-	source = filepath.Join(s.dir, s.root, source)
-	dest = filepath.Join(s.dir, s.root, dest)
+	if err := s.shouldBeExist(source); err != nil {
+		return err
+	}
 
-	return os.Rename(source, dest)
+	if err := s.shouldNotBeExist(dest); err != nil {
+		return err
+	}
+
+	return os.Rename(filepath.Join(s.dir, s.root, source), filepath.Join(s.dir, s.root, dest))
 }
 
 func (s *SeekerIn) Remove(path string) error {
-	path = filepath.Join(s.root, s.dir, path)
-	return os.RemoveAll(path)
+	if err := s.shouldBeExist(path); err != nil {
+		return err
+	}
+
+	return os.RemoveAll(filepath.Join(s.root, s.dir, path))
+}
+
+func (s *SeekerIn) inRoot(path string) error {
+	dir := filepath.Join(s.root, s.dir)
+	return inRoot(dir, filepath.Join(dir, path))
+}
+
+func (s *SeekerIn) shouldBeExist(path string) error {
+	if err := s.inRoot(path); err != nil {
+		return err
+	}
+
+	if !s.Exist(path) {
+		return &ErrNotExist{path: path}
+	}
+
+	return nil
+}
+
+func (s *SeekerIn) shouldNotBeExist(path string) error {
+	if err := s.inRoot(path); err != nil {
+		return err
+	}
+
+	if s.Exist(path) {
+		return &ErrAlreadyExist{path: path}
+	}
+
+	return nil
 }
 
 func (s *SeekerIn) entry(path string) (Entry, error) {
+	if err := s.inRoot(path); err != nil {
+		return nil, err
+	}
+
 	path = filepath.Join(s.root, s.dir, path)
 	local, err := s.stripPath(path)
 	if err != nil {
@@ -103,9 +147,10 @@ func (s *SeekerIn) entry(path string) (Entry, error) {
 	}
 
 	f, err := os.Open(path)
-	if err = checkNotNotExist(local, err); err != nil {
+	if err = checkNotExist(local, err); err != nil {
 		return nil, err
 	}
+	defer f.Close()
 
 	stat, err := f.Stat()
 	if err != nil {
@@ -124,7 +169,7 @@ func (s *SeekerIn) each(handler EachEntryHandler) error {
 	}
 
 	info, err := ioutil.ReadDir(path)
-	if checkNotNotExist(local, err) != nil {
+	if checkNotExist(local, err) != nil {
 		return err
 	}
 

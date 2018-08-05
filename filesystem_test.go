@@ -46,7 +46,7 @@ func TestFs_Abs(t *testing.T) {
 	root := filepath.Join(tmp, "root")
 	fs, err := Root(root)
 	if err != nil {
-		t.Error("Must not be errors", err)
+		t.Error(err)
 	}
 
 	if root != fs.Abs() {
@@ -132,7 +132,7 @@ func TestFs_DirNotFound(t *testing.T) {
 
 	fs, err = Root(fs.Abs())
 	if err != nil {
-		t.Error("Must not be errors", err)
+		t.Error(err)
 		return
 	}
 
@@ -228,7 +228,7 @@ func TestFs_FileNotFound(t *testing.T) {
 
 	fs, err = Root(fs.Abs())
 	if err != nil {
-		t.Error("Must not be errors", err)
+		t.Error(err)
 		return
 	}
 
@@ -321,6 +321,6 @@ func TestRoot_Ok(t *testing.T) {
 
 	_, err = Root(filepath.Join(tmp, "root"))
 	if err != nil {
-		t.Error("Must not be errors", err)
+		t.Error(err)
 	}
 }

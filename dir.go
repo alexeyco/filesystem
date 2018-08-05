@@ -157,6 +157,28 @@ func (d *Dir) Mkdir(name string) (*Dir, error) {
 	return &Dir{}, nil
 }
 
+func (d *Dir) flush() {
+	d.lPaths = false
+	d.lDirs = false
+	d.lFiles = false
+
+	d.paths = Paths{}
+	d.dirs = Dirs{}
+	d.files = Files{}
+}
+
+func (d *Dir) lock() {
+	d.muPaths.Lock()
+	d.muDirs.Lock()
+	d.muFiles.Lock()
+}
+
+func (d *Dir) unlock() {
+	d.muPaths.Unlock()
+	d.muDirs.Unlock()
+	d.muFiles.Unlock()
+}
+
 // ErrMustBeDirectory error must be directory
 type ErrMustBeDirectory struct {
 	path string

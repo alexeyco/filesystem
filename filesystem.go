@@ -2,23 +2,28 @@ package filesystem
 
 import "path/filepath"
 
+// Fs filesystem object
 type Fs struct {
-	path string
-	root *Dir
+	abs  string // root absolute abs
+	root *Dir   // root directory object
 }
 
-func (fs *Fs) Root() string {
-	return fs.path
+// Abs returns absolute abs
+func (fs *Fs) Abs() string {
+	return fs.abs
 }
 
+// List returns nested contents
 func (fs *Fs) List() (Paths, error) {
 	return fs.root.List()
 }
 
+// Dirs returns nested directories
 func (fs *Fs) Dirs() (Dirs, error) {
 	return fs.root.Dirs()
 }
 
+// Dir returns nested directory by name
 func (fs *Fs) Dir(name string) (*Dir, error) {
 	dirs, err := fs.root.Dirs()
 	if err != nil {
@@ -28,10 +33,12 @@ func (fs *Fs) Dir(name string) (*Dir, error) {
 	return dirs.Dir(name)
 }
 
+// Files returns nested files
 func (fs *Fs) Files() (Files, error) {
 	return fs.root.Files()
 }
 
+// File returns nested file by name
 func (fs *Fs) File(name string) (*File, error) {
 	files, err := fs.root.Files()
 	if err != nil {
@@ -41,15 +48,16 @@ func (fs *Fs) File(name string) (*File, error) {
 	return files.File(name)
 }
 
+// Root returns root directory
 func Root(path string) (*Fs, error) {
 	abs, err := filepath.Abs(path)
 	if err != nil {
 		return nil, err
 	}
 
-	// TODO: check path is directory
+	// TODO: check abs is directory
 
-	fs := &Fs{path: abs}
+	fs := &Fs{abs: abs}
 	fs.root = newDir(fs, nil, "")
 
 	return fs, nil

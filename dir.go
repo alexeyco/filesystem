@@ -6,11 +6,12 @@ import (
 	"sync"
 )
 
+// Dir directory type
 type Dir struct {
-	fs     *Fs
-	parent *Dir
-	name   string
-	path   string
+	fs     *Fs    // root object
+	parent *Dir   // parent directory
+	name   string // directory name
+	path   string // path from root directory
 
 	lPaths  bool
 	muPaths sync.Mutex
@@ -25,42 +26,52 @@ type Dir struct {
 	files   Files
 }
 
+// IsFile always false
 func (d *Dir) IsFile() bool {
 	return false
 }
 
+// IsDir always true
 func (d *Dir) IsDir() bool {
 	return true
 }
 
+// Parent returns parent directory object; if directory is root - returns nil
 func (d *Dir) Parent() *Dir {
 	return d.parent
 }
 
+// Name returns directory name
 func (d *Dir) Name() string {
 	return d.name
 }
 
+// Path returns directory abs
 func (d *Dir) Path() string {
 	return d.path
 }
 
-func (d *Dir) fullPath() string {
-	return filepath.Join(d.fs.Root(), d.path)
+// abs returns directory absolute abs
+func (d *Dir) abs() string {
+	return filepath.Join(d.fs.Abs(), d.path)
 }
 
+// Rename renames current directory
 func (*Dir) Rename(name string) error {
 	return nil
 }
 
+// Move moves directory with all contents to destination directory
 func (*Dir) Move(dir *Dir) error {
 	return nil
 }
 
+// Remove removes current directory with all contents
 func (*Dir) Remove() error {
 	return nil
 }
 
+// List returns all directory nested contents
 func (d *Dir) List() (Paths, error) {
 	d.muPaths.Lock()
 	defer d.muPaths.Unlock()
@@ -80,6 +91,7 @@ func (d *Dir) List() (Paths, error) {
 	return d.paths, nil
 }
 
+// Dirs returns nested directories list
 func (d *Dir) Dirs() (Dirs, error) {
 	d.muDirs.Lock()
 	defer d.muDirs.Unlock()
@@ -99,6 +111,7 @@ func (d *Dir) Dirs() (Dirs, error) {
 	return d.dirs, nil
 }
 
+// Dir returns nested directory by name
 func (d *Dir) Dir(name string) (*Dir, error) {
 	dirs, err := d.Dirs()
 	if err != nil {
@@ -108,6 +121,7 @@ func (d *Dir) Dir(name string) (*Dir, error) {
 	return dirs.Dir(name)
 }
 
+// Files returns nested files
 func (d *Dir) Files() (Files, error) {
 	d.muFiles.Lock()
 	defer d.muFiles.Unlock()
@@ -127,6 +141,7 @@ func (d *Dir) Files() (Files, error) {
 	return d.files, nil
 }
 
+// File returns nested file by name
 func (d *Dir) File(name string) (*File, error) {
 	files, err := d.Files()
 	if err != nil {
@@ -136,36 +151,45 @@ func (d *Dir) File(name string) (*File, error) {
 	return files.File(name)
 }
 
+// Mkdir creates a new nested directory
 func (d *Dir) Mkdir(name string) (*Dir, error) {
 	return &Dir{}, nil
 }
 
+// ErrMustBeDirectory error must be directory
 type ErrMustBeDirectory struct {
 	path string
 }
 
+// Error returns error string
 func (e ErrMustBeDirectory) Error() string {
-	return fmt.Sprintf("path %s must be directory", e.path)
+	return fmt.Sprintf("abs %s must be directory", e.path)
 }
 
+// ErrDirNotFound error directory not found
 type ErrDirNotFound struct {
 	path string
 }
 
+// Error returns error string
 func (e ErrDirNotFound) Error() string {
 	return fmt.Sprintf("directory %s not found", e.path)
 }
 
+// HandlerEachDir handler for iteration through directories
 type HandlerEachDir func(dir *Dir)
 
+// Dirs directories collection
 type Dirs map[string]*Dir
 
+// Each iterates through directories
 func (d Dirs) Each(handler HandlerEachDir) {
 	for _, dir := range d {
 		handler(dir)
 	}
 }
 
+// Dir returns nested directory by name
 func (d Dirs) Dir(name string) (*Dir, error) {
 	var (
 		dir *Dir

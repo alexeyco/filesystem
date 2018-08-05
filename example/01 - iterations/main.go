@@ -23,7 +23,7 @@ func main() {
 		log.Fatalln(err)
 	}
 
-	fmt.Println("Contents of ", fs.Root())
+	fmt.Println("Contents of ", fs.Abs())
 	dirs.Each(func(dir *filesystem.Dir) {
 		fmt.Println("Dir:  ", dir.Name())
 	})

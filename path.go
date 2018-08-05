@@ -5,22 +5,26 @@ import (
 	"log"
 )
 
+// Path basic filesystem item
 type Path interface {
 	IsFile() bool
 	IsDir() bool
 	Parent() *Dir
 	Name() string
 	Path() string
-	fullPath() string
+	abs() string
 	Rename(name string) error
 	Move(dir *Dir) error
 	Remove() error
 }
 
+// HandlerEachPath handler for iteration through all contents
 type HandlerEachPath func(path Path)
 
+// Paths directory contents collection
 type Paths []Path
 
+// Dirs returns dirs
 func (p Paths) Dirs() Dirs {
 	dirs := Dirs{}
 
@@ -34,6 +38,7 @@ func (p Paths) Dirs() Dirs {
 	return dirs
 }
 
+// Files returns files
 func (p Paths) Files() Files {
 	files := Files{}
 
@@ -47,6 +52,7 @@ func (p Paths) Files() Files {
 	return files
 }
 
+// Each iterates through all contents
 func (p Paths) Each(handler HandlerEachPath) {
 	for _, path := range p {
 		handler(path)
@@ -54,7 +60,7 @@ func (p Paths) Each(handler HandlerEachPath) {
 }
 
 func newPaths(dir *Dir) (Paths, error) {
-	paths, err := ioutil.ReadDir(dir.fullPath())
+	paths, err := ioutil.ReadDir(dir.abs())
 	if err != nil {
 		log.Fatal(err)
 	}

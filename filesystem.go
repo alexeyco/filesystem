@@ -8,6 +8,10 @@ type Fs struct {
 	root string
 }
 
+func (fs *Fs) Root() string {
+	return fs.root
+}
+
 func (fs *Fs) Read(seeker Seeker) Seeker {
 	seeker.SetRoot(fs.root)
 	return seeker
@@ -17,8 +21,8 @@ func (fs *Fs) Each() *Iterator {
 	return fs.Read(In("")).Each()
 }
 
-func (fs *Fs) Exists(path string) bool {
-	return fs.inRoot().Exists(path)
+func (fs *Fs) Exist(path string) bool {
+	return fs.inRoot().Exist(path)
 }
 
 func (fs *Fs) IsDir(path string) bool {
@@ -41,12 +45,8 @@ func (fs *Fs) Mkdir(path string) error {
 	return fs.inRoot().Mkdir(path)
 }
 
-func (fs *Fs) Rename(source, dest string) error {
-	return fs.inRoot().Rename(source, dest)
-}
-
 func (fs *Fs) Move(source, dest string) error {
-	return fs.inRoot().Remove(source, dest)
+	return fs.inRoot().Move(source, dest)
 }
 
 func (fs *Fs) Remove(path string) error {

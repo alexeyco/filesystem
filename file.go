@@ -3,6 +3,7 @@ package filesystem
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 )
 
 type EachFileHandler func(file *File)
@@ -28,9 +29,9 @@ func (f *File) Stat() os.FileInfo {
 	return f.info
 }
 
-func newFile(name string, info os.FileInfo) *File {
+func newFile(path string, info os.FileInfo) *File {
 	return &File{
-		name: name,
+		name: filepath.Join(path, info.Name()),
 		info: info,
 	}
 }

@@ -5,13 +5,23 @@ type Iterator struct {
 }
 
 func (i *Iterator) Entry(handler EachEntryHandler) error {
-	return nil
+	return i.seeker.each(handler)
 }
 
 func (i *Iterator) Dir(handler EachDirHandler) error {
-	return nil
+	return i.seeker.each(func(entry Entry) {
+		if entry.IsDir() {
+			e, _ := entry.(*Dir)
+			handler(e)
+		}
+	})
 }
 
 func (i *Iterator) File(handler EachFileHandler) error {
-	return nil
+	return i.seeker.each(func(entry Entry) {
+		if entry.IsFile() {
+			f, _ := entry.(*File)
+			handler(f)
+		}
+	})
 }

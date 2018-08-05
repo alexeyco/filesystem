@@ -3,6 +3,7 @@ package filesystem
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 )
 
 type EachDirHandler func(dir *Dir)
@@ -24,9 +25,9 @@ func (d *Dir) Name() string {
 	return d.name
 }
 
-func newDir(name string, info os.FileInfo) *Dir {
+func newDir(path string, info os.FileInfo) *Dir {
 	return &Dir{
-		name: name,
+		name: filepath.Join(path, info.Name()),
 		info: info,
 	}
 }

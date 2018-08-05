@@ -119,7 +119,7 @@ func TestFs_DirNotFound(t *testing.T) {
 
 	dir, err := fs.Dir("fiz")
 	if err == nil {
-		t.Error("Must be errors")
+		t.Error("Must be error")
 	} else {
 		if _, ok := err.(*ErrDirNotFound); !ok {
 			t.Error("Error must have *ErrDirNotFound type", err)
@@ -128,6 +128,22 @@ func TestFs_DirNotFound(t *testing.T) {
 
 	if dir != nil {
 		t.Error("Directory must be null, not", dir)
+	}
+
+	fs, err = Root(fs.Abs())
+	if err != nil {
+		t.Error("Must not be errors", err)
+		return
+	}
+
+	os.RemoveAll(filepath.Join(fs.Abs()))
+	_, err = fs.Dir("foo")
+	if err == nil {
+		t.Error("Must be error")
+	} else {
+		if _, ok := err.(*ErrDirNotFound); !ok {
+			t.Error("Error must have *ErrDirNotFound type", err)
+		}
 	}
 }
 
@@ -208,6 +224,23 @@ func TestFs_FileNotFound(t *testing.T) {
 
 	if file != nil {
 		t.Error("File must be null, not", file)
+	}
+
+	fs, err = Root(fs.Abs())
+	if err != nil {
+		t.Error("Must not be errors", err)
+		return
+	}
+
+	os.RemoveAll(fs.Abs())
+
+	_, err = fs.File("bar.txt")
+	if err == nil {
+		t.Error("Must be error")
+	} else {
+		if _, ok := err.(*ErrDirNotFound); !ok {
+			t.Error("Error must have *ErrFileNotFound type", err)
+		}
 	}
 }
 

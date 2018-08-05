@@ -1,6 +1,7 @@
 package filesystem
 
 import (
+	"fmt"
 	"os"
 )
 
@@ -32,4 +33,12 @@ func newFile(name string, info os.FileInfo) *File {
 		name: name,
 		info: info,
 	}
+}
+
+type ErrNotFile struct {
+	path string
+}
+
+func (e *ErrNotFile) Error() string {
+	return fmt.Sprintf("path %s is not a file", e.path)
 }

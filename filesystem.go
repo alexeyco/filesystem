@@ -21,23 +21,23 @@ func (fs *Fs) Each() *Iterator {
 }
 
 func (fs *Fs) Exists(path string) bool {
-	return false
-}
-
-func (fs *Fs) IsFile(path string) bool {
-	if !fs.Exists(path) {
-		return false
-	}
-
-	return false
+	return fs.Read(In("")).Exists(path)
 }
 
 func (fs *Fs) IsDir(path string) bool {
-	if !fs.Exists(path) {
-		return false
-	}
+	return fs.Read(In("")).IsDir(path)
+}
 
-	return false
+func (fs *Fs) IsFile(path string) bool {
+	return fs.Read(In("")).IsFile(path)
+}
+
+func (fs *Fs) Dir(path string) (*Dir, error) {
+	return fs.Read(In("")).Dir(path)
+}
+
+func (fs *Fs) File(path string) (*File, error) {
+	return fs.Read(In("")).File(path)
 }
 
 func (fs *Fs) Mkdir(path string) error {

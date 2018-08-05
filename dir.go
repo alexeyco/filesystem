@@ -9,6 +9,7 @@ import (
 // Dir directory type
 type Dir struct {
 	fs     *Fs    // root object
+	depth  int    // directory depth
 	parent *Dir   // parent directory
 	name   string // directory name
 	path   string // path from root directory

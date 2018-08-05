@@ -6,144 +6,40 @@ import (
 	"path/filepath"
 )
 
-// File file object
+type EachFileHandler func(file *File)
+
 type File struct {
-	parent *Dir   // parent directory
-	name   string // file name
+	name string
+	info os.FileInfo
 }
 
-// IsFile always true
-func (*File) IsFile() bool {
-	return true
-}
-
-// IsDir always false
 func (*File) IsDir() bool {
 	return false
 }
 
-// Parent returns parent directory
-func (f *File) Parent() *Dir {
-	return f.parent
+func (*File) IsFile() bool {
+	return true
 }
 
-// Name returns file name
 func (f *File) Name() string {
 	return f.name
 }
 
-// Path returns file abs
-func (f *File) Path() string {
-	return filepath.Join(f.Parent().Path(), f.name)
+func (f *File) Stat() os.FileInfo {
+	return f.info
 }
 
-// abs returns file absolute abs
-func (f *File) abs() string {
-	return filepath.Join(f.Parent().abs(), f.Name())
-}
-
-// Rename renames current file
-func (f *File) Rename(name string) error {
-	p := f.Parent()
-
-	p.lock()
-	defer p.unlock()
-
-	return f.rename(name)
-}
-
-func (f *File) rename(name string) error {
-	oldName := f.abs()
-	newName := filepath.Join(f.Parent().abs(), name)
-
-	err := os.Rename(oldName, newName)
-	if err != nil {
-		f.name = name
+func newFile(path string, info os.FileInfo) *File {
+	return &File{
+		name: filepath.Join(path, info.Name()),
+		info: info,
 	}
-
-	return err
 }
 
-// Move moves current file to destination directory
-func (f *File) Move(dir *Dir) error {
-	p := f.Parent()
-
-	p.lock()
-	defer dir.unlock()
-	dir.flush()
-
-	return f.move(dir)
-}
-
-func (f *File) move(dir *Dir) error {
-	oldName := f.abs()
-	newName := filepath.Join(dir.abs(), f.Name())
-
-	err := os.Rename(oldName, newName)
-	if err != nil {
-		f.parent = dir
-	}
-
-	return err
-}
-
-// Remove removes current file
-func (f *File) Remove() error {
-	p := f.Parent()
-
-	p.lock()
-	defer p.unlock()
-
-	return f.remove()
-}
-
-func (f *File) remove() error {
-	return os.RemoveAll(f.abs())
-}
-
-// ErrFileNotFound file not found
-type ErrFileNotFound struct {
+type ErrNotFile struct {
 	path string
 }
 
-// Error returns error string
-func (e ErrFileNotFound) Error() string {
-	return fmt.Sprintf("file %s not found", e.path)
-}
-
-// HandlerEachFile handler for iteration through files
-type HandlerEachFile func(file *File)
-
-// Files files collection
-type Files map[string]*File
-
-// Each iterates through files
-func (f Files) Each(handler HandlerEachFile) {
-	for _, file := range f {
-		handler(file)
-	}
-}
-
-// Exists checks if nested file exists
-func (f Files) Exists(name string) bool {
-	_, ok := f[name]
-	return ok
-}
-
-// File returns file by name
-func (f Files) File(name string) (*File, error) {
-	if !f.Exists(name) {
-		return nil, &ErrFileNotFound{
-			path: name,
-		}
-	}
-
-	return f[name], nil
-}
-
-func newFile(parent *Dir, local string) *File {
-	return &File{
-		parent: parent,
-		name:   local,
-	}
+func (e *ErrNotFile) Error() string {
+	return fmt.Sprintf("path %s is not a file", e.path)
 }

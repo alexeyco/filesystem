@@ -1,78 +1,69 @@
 package filesystem
 
 import (
-	"os"
 	"path/filepath"
 )
 
-// Fs filesystem object
 type Fs struct {
-	abs  string // root absolute abs
-	root *Dir   // root directory object
+	root string
 }
 
-// Abs returns absolute abs
-func (fs *Fs) Abs() string {
-	return fs.abs
+func (fs *Fs) Root() string {
+	return fs.root
 }
 
-// List returns nested contents
-func (fs *Fs) List() (Paths, error) {
-	return fs.root.List()
+func (fs *Fs) Read(seeker Seeker) Seeker {
+	seeker.SetRoot(fs.root)
+	return seeker
 }
 
-// Dirs returns nested directories
-func (fs *Fs) Dirs() (Dirs, error) {
-	return fs.root.Dirs()
+func (fs *Fs) Each() *Iterator {
+	return fs.Read(In("")).Each()
 }
 
-// Dir returns nested directory by name
-func (fs *Fs) Dir(name string) (*Dir, error) {
-	dirs, err := fs.root.Dirs()
+func (fs *Fs) Exist(path string) bool {
+	return fs.inRoot().Exist(path)
+}
+
+func (fs *Fs) IsDir(path string) bool {
+	return fs.inRoot().IsDir(path)
+}
+
+func (fs *Fs) IsFile(path string) bool {
+	return fs.inRoot().IsFile(path)
+}
+
+func (fs *Fs) Dir(path string) (*Dir, error) {
+	return fs.inRoot().Dir(path)
+}
+
+func (fs *Fs) File(path string) (*File, error) {
+	return fs.inRoot().File(path)
+}
+
+func (fs *Fs) Mkdir(path string) error {
+	return fs.inRoot().Mkdir(path)
+}
+
+func (fs *Fs) Move(source, dest string) error {
+	return fs.inRoot().Move(source, dest)
+}
+
+func (fs *Fs) Remove(path string) error {
+	return fs.inRoot().Remove(path)
+}
+
+func (fs *Fs) inRoot() Seeker {
+	return fs.Read(In(""))
+}
+
+func Root(dir string) (*Fs, error) {
+	root, err := filepath.Abs(dir)
 	if err != nil {
 		return nil, err
 	}
 
-	return dirs.Dir(name)
-}
-
-// Files returns nested files
-func (fs *Fs) Files() (Files, error) {
-	return fs.root.Files()
-}
-
-// File returns nested file by name
-func (fs *Fs) File(name string) (*File, error) {
-	files, err := fs.root.Files()
-	if err != nil {
-		return nil, err
-	}
-
-	return files.File(name)
-}
-
-// Root returns root directory
-func Root(path string) (*Fs, error) {
-	path, err := filepath.Abs(path)
-	if err != nil {
-		return nil, err
-	}
-
-	stat, err := os.Stat(path)
-	if os.IsNotExist(err) {
-		return nil, &ErrDirNotFound{
-			path: path,
-		}
-	}
-
-	if !stat.IsDir() {
-		return nil, &ErrMustBeDirectory{
-			path: path,
-		}
-	}
-
-	fs := &Fs{abs: path}
-	fs.root = newDir(fs, nil, "")
-
-	return fs, nil
+	return &Fs{
+		root: root,
+	}, nil
 }

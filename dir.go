@@ -202,7 +202,12 @@ func (d *Dir) File(name string) (*File, error) {
 
 // Mkdir creates a new nested directory
 func (d *Dir) Mkdir(name string) (*Dir, error) {
-	return &Dir{}, nil
+	if err := os.MkdirAll(filepath.Join(d.abs(), name), os.ModePerm); err != nil {
+		return nil, err
+	}
+
+	d.flush()
+	return d.Dir(name)
 }
 
 func (d *Dir) flush() {

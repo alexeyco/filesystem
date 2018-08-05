@@ -53,3 +53,8 @@ func TestDir_Move(t *testing.T) {
 func TestDir_Remove(t *testing.T) {
 
 }
+
+// TestDir_Mkdir checks directory create
+func TestDir_Mkdir(t *testing.T) {
+
+}

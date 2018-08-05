@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-func getFsTmp() (*Fs, error) {
+func getTmpRoot() (*Fs, error) {
 	dir, err := mkTmpDir()
 	if err != nil {
 		return nil, err
@@ -17,7 +17,7 @@ func getFsTmp() (*Fs, error) {
 }
 
 func mkTmpDir() (string, error) {
-	return ioutil.TempDir("", "fs-test")
+	return ioutil.TempDir("", "filepath-test")
 }
 
 func mkDir(root, name string) error {
@@ -29,261 +29,376 @@ func mkFile(root, name string) error {
 	return ioutil.WriteFile(name, []byte{}, os.ModePerm)
 }
 
-// TestFs_Abs check absolute path
-func TestFs_Abs(t *testing.T) {
-	tmp, err := mkTmpDir()
+func TestRoot(t *testing.T) {
+	dir, err := mkTmpDir()
 	if err != nil {
-		t.Error("Can't create temporary Fs root", err)
+		t.Error(err)
 		return
 	}
-	defer os.RemoveAll(tmp)
+	defer os.RemoveAll(dir)
 
-	if err := mkDir(tmp, "root"); err != nil {
-		t.Error("Can't create temporary file", err)
-		return
-	}
-
-	root := filepath.Join(tmp, "root")
-	fs, err := Root(root)
-	if err != nil {
-		t.Error("Must not be errors", err)
-	}
-
-	if root != fs.Abs() {
-		t.Errorf("Fs must be %s, not %s", root, fs.Abs())
-	}
-}
-
-// TestFs_List check list
-func TestFs_List(t *testing.T) {
-	fs, err := getFsTmp()
-	if err != nil {
-		t.Error("Can't create temporary Fs root", err)
-		return
-	}
-	defer os.RemoveAll(fs.Abs())
-
-	mkDir(fs.Abs(), "foo")
-	mkDir(fs.Abs(), "bar")
-	mkFile(fs.Abs(), "baz.txt")
-
-	dirs, err := fs.List()
-	if err != nil {
-		t.Error("Can't list root directory", err)
-		return
-	}
-
-	l := len(dirs)
-	if l != 3 {
-		t.Errorf("List length must be 3, not %d", l)
-	}
-}
-
-// TestFs_Dirs  tests directories count
-func TestFs_Dirs(t *testing.T) {
-	fs, err := getFsTmp()
-	if err != nil {
-		t.Error("Can't create temporary Fs root", err)
-		return
-	}
-	defer os.RemoveAll(fs.Abs())
-
-	mkDir(fs.Abs(), "foo")
-	mkDir(fs.Abs(), "bar")
-	mkFile(fs.Abs(), "baz.txt")
-
-	dirs, err := fs.Dirs()
-	if err != nil {
-		t.Error("Can't list root directory", err)
-		return
-	}
-
-	l := len(dirs)
-	if l != 2 {
-		t.Errorf("Dirs count must be 2, not %d", l)
-	}
-}
-
-func TestFs_DirNotFound(t *testing.T) {
-	fs, err := getFsTmp()
-	if err != nil {
-		t.Error("Can't create temporary Fs root", err)
-		return
-	}
-	defer os.RemoveAll(fs.Abs())
-
-	mkDir(fs.Abs(), "foo")
-	mkDir(fs.Abs(), "bar")
-	mkFile(fs.Abs(), "baz.txt")
-
-	dir, err := fs.Dir("fiz")
+	// An attempt to specify a non-existent directory should cause an error
+	_, err = Root(filepath.Join(dir, "wrong-directory"))
 	if err == nil {
-		t.Error("Must be errors")
-	} else {
-		if _, ok := err.(*ErrDirNotFound); !ok {
-			t.Error("Error must have *ErrDirNotFound type", err)
-		}
+		t.Error("Should be error")
+		return
 	}
 
-	if dir != nil {
-		t.Error("Directory must be null, not", dir)
+	if _, ok := err.(*ErrNotExist); !ok {
+		t.Error("Should be *ErrNotExist type", err)
+		return
+	}
+
+	// If directory correct, should be ok
+	if _, err = Root(dir); err != nil {
+		t.Error(err)
 	}
 }
 
-func TestFs_DirOk(t *testing.T) {
-	fs, err := getFsTmp()
+func TestFs_Root(t *testing.T) {
+	dir, err := mkTmpDir()
 	if err != nil {
-		t.Error("Can't create temporary Fs root", err)
+		t.Error(err)
 		return
 	}
-	defer os.RemoveAll(fs.Abs())
+	defer os.RemoveAll(dir)
 
-	mkDir(fs.Abs(), "foo")
-	mkDir(fs.Abs(), "bar")
-	mkFile(fs.Abs(), "baz.txt")
-
-	dir, err := fs.Dir("foo")
+	root, err := Root(dir)
 	if err != nil {
-		t.Error("There must be a \"foo\" directory", err)
+		t.Error(err)
 		return
 	}
 
-	if dir.Name() != "foo" {
-		t.Errorf("Directory name must be \"foo\", not %s", dir.Name())
-	}
-
-	if dir.Path() != "foo" {
-		t.Errorf("Directory path must be \"foo\", not %s", dir.Name())
+	if root.Root() != dir {
+		t.Errorf("Incorrect Fs root: should be \"%s\", not \"%s\"", dir, root.Root())
 	}
 }
 
-// TestFs_Files tests files count
-func TestFs_Files(t *testing.T) {
-	fs, err := getFsTmp()
+func TestFs_Exist(t *testing.T) {
+	root, err := getTmpRoot()
 	if err != nil {
-		t.Error("Can't create temporary Fs root", err)
+		t.Error(err)
 		return
 	}
-	defer os.RemoveAll(fs.Abs())
+	defer os.RemoveAll(root.Root())
 
-	mkDir(fs.Abs(), "foo")
-	mkFile(fs.Abs(), "bar.txt")
-	mkFile(fs.Abs(), "baz.txt")
-
-	files, err := fs.Files()
-	if err != nil {
-		t.Error("Can't list root files", err)
-		return
+	if root.Exist("foo") {
+		t.Errorf("\"%s\" should not exist", "foo")
 	}
 
-	l := len(files)
-	if l != 2 {
-		t.Errorf("Files count must be 2, not %d", l)
+	if root.Exist("foo.txt") {
+		t.Errorf("\"%s\" should not exist", "foo.txt")
+	}
+
+	mkDir(root.Root(), "foo")
+	mkFile(root.Root(), "foo.txt")
+
+	if !root.Exist("foo") {
+		t.Errorf("\"%s\" should exist", "foo")
+	}
+
+	if !root.Exist("foo.txt") {
+		t.Errorf("\"%s\" should exist", "foo.txt")
+	}
+
+	if root.Exist("../..") {
+		t.Error("there should be nothing outside the root")
 	}
 }
 
-func TestFs_FileNotFound(t *testing.T) {
-	fs, err := getFsTmp()
+func TestFs_IsDir(t *testing.T) {
+	root, err := getTmpRoot()
 	if err != nil {
-		t.Error("Can't create temporary Fs root", err)
+		t.Error(err)
 		return
 	}
-	defer os.RemoveAll(fs.Abs())
+	defer os.RemoveAll(root.Root())
 
-	mkDir(fs.Abs(), "foo")
-	mkDir(fs.Abs(), "bar")
-	mkFile(fs.Abs(), "baz.txt")
+	if root.IsDir("foo") {
+		t.Errorf("\"%s\" should not exist", "foo")
+	}
 
-	file, err := fs.File("fiz.txt")
+	mkDir(root.Root(), "foo")
+	mkFile(root.Root(), "foo.txt")
+
+	if !root.IsDir("foo") {
+		t.Errorf("\"%s\" should be directory", "foo")
+	}
+
+	if root.IsDir("foo.txt") {
+		t.Errorf("\"%s\" should not be directory", "foo.txt")
+	}
+}
+
+func TestFs_IsFile(t *testing.T) {
+	root, err := getTmpRoot()
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	defer os.RemoveAll(root.Root())
+
+	if root.IsDir("foo.txt") {
+		t.Errorf("\"%s\" should not exist", "foo")
+	}
+
+	mkDir(root.Root(), "foo")
+	mkFile(root.Root(), "foo.txt")
+
+	if !root.IsFile("foo.txt") {
+		t.Errorf("\"%s\" should be file", "foo.txt")
+	}
+
+	if root.IsFile("foo") {
+		t.Errorf("\"%s\" should not be directory", "foo")
+	}
+}
+
+func TestFs_Dir(t *testing.T) {
+	root, err := getTmpRoot()
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	defer os.RemoveAll(root.Root())
+
+	mkDir(root.Root(), "foo")
+	mkFile(root.Root(), "bar.txt")
+
+	if _, err = root.Dir("foo"); err != nil {
+		t.Error(err)
+	}
+
+	_, err = root.Dir("bar.txt")
 	if err == nil {
-		t.Error("Must be errors")
-	} else {
-		if _, ok := err.(*ErrFileNotFound); !ok {
-			t.Error("Error must have *ErrFileNotFound type", err)
-		}
+		t.Error("Should be errors")
 	}
 
-	if file != nil {
-		t.Error("File must be null, not", file)
-	}
-}
-
-func TestFs_FileOk(t *testing.T) {
-	fs, err := getFsTmp()
-	if err != nil {
-		t.Error("Can't create temporary Fs root", err)
-		return
-	}
-	defer os.RemoveAll(fs.Abs())
-
-	mkDir(fs.Abs(), "foo")
-	mkDir(fs.Abs(), "bar")
-	mkFile(fs.Abs(), "baz.txt")
-
-	file, err := fs.File("baz.txt")
-	if err != nil {
-		t.Error("There must be a \"baz.txt\" file", err)
-		return
+	if _, ok := err.(*ErrNotDir); !ok {
+		t.Error("Should be *ErrNotDir type", err)
 	}
 
-	if file.Name() != "baz.txt" {
-		t.Errorf("Directory name must be \"baz.txt\", not %s", file.Name())
-	}
-
-	if file.Path() != "baz.txt" {
-		t.Errorf("Directory path must be \"baz.txt\", not %s", file.Name())
-	}
-}
-
-// TestRoot_NotFound when trying to open a nonexistent directory, there must be an appropriate error
-func TestRoot_NotFound(t *testing.T) {
-	_, err := Root("./wrong/directory")
+	_, err = root.Dir("fizz")
 	if err == nil {
-		t.Error("Must be error")
-		return
+		t.Error("Should be errors")
 	}
 
-	if _, ok := err.(*ErrDirNotFound); !ok {
-		t.Error("Must be ErrNotFound error", err)
-	}
-}
-
-// TestRoot_Ok only a directory can be a root
-func TestRoot_MustBeDirectory(t *testing.T) {
-	tmp, err := mkTmpDir()
-	if err != nil {
-		t.Error("Can't create temporary Fs root", err)
-		return
-	}
-	defer os.RemoveAll(tmp)
-
-	if err := mkFile(tmp, "root"); err != nil {
-		t.Error("Can't create temporary file", err)
-		return
+	if _, ok := err.(*ErrNotExist); !ok {
+		t.Error("Should be *ErrNotExist type", err)
 	}
 
-	_, err = Root(filepath.Join(tmp, "root"))
+	_, err = root.Dir("../..")
 	if err == nil {
-		t.Error("Root should not be a file")
+		t.Error("Should be error")
+		return
+	}
+
+	if _, ok := err.(*ErrNotInRoot); !ok {
+		t.Error("Should be *ErrNotInRoot type", err)
+		return
 	}
 }
 
-// TestRoot_Ok all requirements are met
-func TestRoot_Ok(t *testing.T) {
-	tmp, err := mkTmpDir()
+func TestFs_File(t *testing.T) {
+	root, err := getTmpRoot()
 	if err != nil {
-		t.Error("Can't create temporary Fs root", err)
+		t.Error(err)
 		return
 	}
-	defer os.RemoveAll(tmp)
+	defer os.RemoveAll(root.Root())
 
-	if err := mkDir(tmp, "root"); err != nil {
-		t.Error("Can't create temporary file", err)
+	mkDir(root.Root(), "foo")
+	mkFile(root.Root(), "bar.txt")
+
+	if _, err = root.File("bar.txt"); err != nil {
+		t.Error(err)
+	}
+
+	_, err = root.File("foo")
+	if err == nil {
+		t.Error("Should be errors")
+	}
+
+	if _, ok := err.(*ErrNotFile); !ok {
+		t.Error("Should be *ErrNotFile type", err)
+	}
+
+	_, err = root.File("fizz.txt")
+	if err == nil {
+		t.Error("Should be errors")
+	}
+
+	if _, ok := err.(*ErrNotExist); !ok {
+		t.Error("Should be *ErrNotExist type", err)
+	}
+
+	_, err = root.File("../..")
+	if err == nil {
+		t.Error("Should be error")
 		return
 	}
 
-	_, err = Root(filepath.Join(tmp, "root"))
+	if _, ok := err.(*ErrNotInRoot); !ok {
+		t.Error("Should be *ErrNotInRoot type", err)
+		return
+	}
+}
+
+func TestFs_Mkdir(t *testing.T) {
+	root, err := getTmpRoot()
 	if err != nil {
-		t.Error("Must not be errors", err)
+		t.Error(err)
+		return
+	}
+	defer os.RemoveAll(root.Root())
+
+	if err := root.Mkdir("foo"); err != nil {
+		t.Error(err)
+	}
+
+	if !root.IsDir("foo") {
+		t.Errorf("\"%s\" should not be directory", "foo")
+	}
+
+	err = root.Mkdir("../../foo")
+	if err == nil {
+		t.Error("Should be error")
+		return
+	}
+
+	if _, ok := err.(*ErrNotInRoot); !ok {
+		t.Error("Should be *ErrNotInRoot type", err)
+		return
+	}
+}
+
+func TestFs_Move(t *testing.T) {
+	root, err := getTmpRoot()
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	defer os.RemoveAll(root.Root())
+
+	mkDir(root.Root(), "foo/bar/baz")
+	mkFile(root.Root(), "bar")
+	mkFile(root.Root(), "bar.txt")
+
+	if err := root.Move("bar", "foo/bar/baz/bar"); err != nil {
+		t.Error(err)
+	}
+
+	if err := root.Move("bar.txt", "foo/bar/baz/bar.txt"); err != nil {
+		t.Error(err)
+	}
+
+	if root.Exist("bar") {
+		t.Errorf("\"%s\" should not exist", "bar")
+	}
+
+	if root.Exist("bar.txt") {
+		t.Errorf("\"%s\" should not exist", "bar.txt")
+	}
+
+	if !root.Exist("foo/bar/baz/bar") {
+		t.Errorf("\"%s\" should not exist", "foo/bar/baz/bar")
+	}
+
+	if !root.Exist("foo/bar/baz/bar.txt") {
+		t.Errorf("\"%s\" should not exist", "foo/bar/baz/bar.txt")
+	}
+
+	err = root.Move("foo/bar/baz/bar.txt", "foo/bar/baz/bar")
+	if err == nil {
+		t.Error("Should be error")
+		return
+	}
+
+	if _, ok := err.(*ErrAlreadyExist); !ok {
+		t.Error("Should be *ErrAlreadyExist type", err)
+		return
+	}
+
+	err = root.Move("bar", "foo/fizz")
+	if err == nil {
+		t.Error("Should be error")
+		return
+	}
+
+	if _, ok := err.(*ErrNotExist); !ok {
+		t.Error("Should be *ErrNotExist type", err)
+		return
+	}
+
+	err = root.Move("../..", "foo/fizz")
+	if err == nil {
+		t.Error("Should be error")
+		return
+	}
+
+	if _, ok := err.(*ErrNotInRoot); !ok {
+		t.Error("Should be *ErrNotInRoot type", err)
+		return
+	}
+
+	err = root.Move("foo", "../..")
+	if err == nil {
+		t.Error("Should be error")
+		return
+	}
+
+	if _, ok := err.(*ErrNotInRoot); !ok {
+		t.Error("Should be *ErrNotInRoot type", err)
+		return
+	}
+}
+
+func TestFs_Remove(t *testing.T) {
+	root, err := getTmpRoot()
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	defer os.RemoveAll(root.Root())
+
+	mkDir(root.Root(), "foo")
+	mkFile(root.Root(), "bar.txt")
+
+	if err := root.Remove("foo"); err != nil {
+		t.Error(err)
+	}
+
+	if root.Exist("foo") {
+		t.Errorf("\"%s\" should not exist", "foo")
+	}
+
+	if err := root.Remove("bar.txt"); err != nil {
+		t.Error(err)
+	}
+
+	if root.Exist("bar.txt") {
+		t.Errorf("\"%s\" should not exist", "bar.txt")
+	}
+
+	err = root.Remove("bar.txt")
+	if err == nil {
+		t.Error("Should be error")
+		return
+	}
+
+	if _, ok := err.(*ErrNotExist); !ok {
+		t.Error("Should be *ErrNotExist type", err)
+		return
+	}
+
+	err = root.Remove("../..")
+	if err == nil {
+		t.Error("Should be error")
+		return
+	}
+
+	if _, ok := err.(*ErrNotInRoot); !ok {
+		t.Error("Should be *ErrNotInRoot type", err)
+		return
 	}
 }

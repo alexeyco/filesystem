@@ -3,76 +3,109 @@ package filesystem
 import (
 	"os"
 	"path/filepath"
+	"strings"
 )
 
-// Fs filesystem object
+// Fs root directory object
 type Fs struct {
-	abs  string // root absolute abs
-	root *Dir   // root directory object
+	root string
 }
 
-// Abs returns absolute abs
-func (fs *Fs) Abs() string {
-	return fs.abs
+// Root returns absolute path to current root directory
+func (fs *Fs) Root() string {
+	return fs.root
 }
 
-// List returns nested contents
-func (fs *Fs) List() (Paths, error) {
-	return fs.root.List()
+// Read seekers factory
+func (fs *Fs) Read(seeker Seeker) Seeker {
+	seeker.SetRoot(fs.root)
+	return seeker
 }
 
-// Dirs returns nested directories
-func (fs *Fs) Dirs() (Dirs, error) {
-	return fs.root.Dirs()
+// Each creates an iterator and returns it
+func (fs *Fs) Each() *Iterator {
+	return fs.Read(In("")).Each()
 }
 
-// Dir returns nested directory by name
-func (fs *Fs) Dir(name string) (*Dir, error) {
-	dirs, err := fs.root.Dirs()
+// Exist checks if root-relative path shouldBeExist
+func (fs *Fs) Exist(path string) bool {
+	return fs.inRoot().Exist(path)
+}
+
+// IsDir checks if root-relative path is a directory
+func (fs *Fs) IsDir(path string) bool {
+	return fs.inRoot().IsDir(path)
+}
+
+// IsFile checks if root-relative path is a file
+func (fs *Fs) IsFile(path string) bool {
+	return fs.inRoot().IsFile(path)
+}
+
+// Dir returns directory info by root-relative path
+func (fs *Fs) Dir(path string) (*Dir, error) {
+	return fs.inRoot().Dir(path)
+}
+
+// File returns file info by root-relative path
+func (fs *Fs) File(path string) (*File, error) {
+	return fs.inRoot().File(path)
+}
+
+// Mkdir creates a new directory in root directory
+func (fs *Fs) Mkdir(path string) error {
+	return fs.inRoot().Mkdir(path)
+}
+
+// Move moves anything inside root
+func (fs *Fs) Move(source, dest string) error {
+	return fs.inRoot().Move(source, dest)
+}
+
+// Remove removes root-relative directory or file by path
+func (fs *Fs) Remove(path string) error {
+	return fs.inRoot().Remove(path)
+}
+
+func (fs *Fs) inRoot() Seeker {
+	return fs.Read(In(""))
+}
+
+// Root returns Fs object by path
+func Root(dir string) (*Fs, error) {
+	root, err := filepath.Abs(dir)
 	if err != nil {
 		return nil, err
 	}
 
-	return dirs.Dir(name)
-}
-
-// Files returns nested files
-func (fs *Fs) Files() (Files, error) {
-	return fs.root.Files()
-}
-
-// File returns nested file by name
-func (fs *Fs) File(name string) (*File, error) {
-	files, err := fs.root.Files()
-	if err != nil {
+	f, err := os.Open(root)
+	if err = checkNotExist(dir, err); err != nil {
 		return nil, err
 	}
 
-	return files.File(name)
-}
-
-// Root returns root directory
-func Root(path string) (*Fs, error) {
-	path, err := filepath.Abs(path)
+	stat, err := f.Stat()
 	if err != nil {
 		return nil, err
-	}
-
-	stat, err := os.Stat(path)
-	if os.IsNotExist(err) {
-		return nil, &ErrDirNotFound{
-			path: path,
-		}
 	}
 
 	if !stat.IsDir() {
-		return nil, &ErrMustBeDirectory{
-			path: path,
+		return nil, &ErrNotDir{path: dir}
+	}
+
+	return &Fs{
+		root: root,
+	}, nil
+}
+
+func inRoot(root, path string) error {
+	s, err := filepath.Rel(root, path)
+	if err == nil {
+		if s == "." || strings.Contains(s, "..") {
+			err = &ErrNotInRoot{
+				path: path,
+			}
 		}
 	}
 
-	fs := &Fs{abs: path}
-	fs.root = newDir(fs, nil, "")
-
-	return fs, nil
+	return err
 }

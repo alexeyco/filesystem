@@ -13,11 +13,13 @@ func main() {
 		log.Fatalln(err)
 	}
 
-	err = fs.Each().Dir(func(dir *filesystem.Dir) {
+	collection := fs.Read(filesystem.In("foo"))
+
+	err = collection.Each().Dir(func(dir *filesystem.Dir) {
 		fmt.Println("Dir:  ", dir.Name())
 	})
 
-	err = fs.Each().File(func(file *filesystem.File) {
+	err = collection.Each().File(func(file *filesystem.File) {
 		fmt.Println("File: ", file.Name())
 	})
 

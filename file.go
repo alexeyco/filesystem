@@ -7,6 +7,7 @@ import (
 type EachFileHandler func(file *File)
 
 type File struct {
+	name string
 	info os.FileInfo
 }
 
@@ -18,16 +19,17 @@ func (*File) IsFile() bool {
 	return true
 }
 
-func (*File) Name() string {
-	return ""
+func (f *File) Name() string {
+	return f.name
 }
 
 func (f *File) Stat() os.FileInfo {
 	return f.info
 }
 
-func newFile(info os.FileInfo) *File {
+func newFile(name string, info os.FileInfo) *File {
 	return &File{
+		name: name,
 		info: info,
 	}
 }

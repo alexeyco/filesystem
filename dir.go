@@ -1,10 +1,13 @@
 package filesystem
 
-import "os"
+import (
+	"os"
+)
 
 type EachDirHandler func(dir *Dir)
 
 type Dir struct {
+	name string
 	info os.FileInfo
 }
 
@@ -16,16 +19,13 @@ func (d *Dir) IsFile() bool {
 	return false
 }
 
-func (*Dir) Name() string {
-	return ""
+func (d *Dir) Name() string {
+	return d.name
 }
 
-func (d *Dir) Stat() os.FileInfo {
-	return d.info
-}
-
-func newDir(info os.FileInfo) *Dir {
+func newDir(name string, info os.FileInfo) *Dir {
 	return &Dir{
+		name: name,
 		info: info,
 	}
 }

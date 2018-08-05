@@ -8,13 +8,12 @@ type Entry interface {
 	IsDir() bool
 	IsFile() bool
 	Name() string
-	Stat() os.FileInfo
 }
 
-func newEntry(info os.FileInfo) Entry {
+func newEntry(name string, info os.FileInfo) Entry {
 	if info.IsDir() {
-		return newDir(info)
+		return newDir(name, info)
 	} else {
-		return newFile(info)
+		return newFile(name, info)
 	}
 }

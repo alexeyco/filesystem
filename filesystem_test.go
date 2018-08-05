@@ -83,22 +83,26 @@ func TestFs_Exist(t *testing.T) {
 	defer os.RemoveAll(root.Root())
 
 	if root.Exist("foo") {
-		t.Errorf("\"%s\" should not shouldBeExist", "foo")
+		t.Errorf("\"%s\" should not exist", "foo")
 	}
 
 	if root.Exist("foo.txt") {
-		t.Errorf("\"%s\" should not shouldBeExist", "foo.txt")
+		t.Errorf("\"%s\" should not exist", "foo.txt")
 	}
 
 	mkDir(root.Root(), "foo")
 	mkFile(root.Root(), "foo.txt")
 
 	if !root.Exist("foo") {
-		t.Errorf("\"%s\" should shouldBeExist", "foo")
+		t.Errorf("\"%s\" should exist", "foo")
 	}
 
 	if !root.Exist("foo.txt") {
-		t.Errorf("\"%s\" should shouldBeExist", "foo.txt")
+		t.Errorf("\"%s\" should exist", "foo.txt")
+	}
+
+	if root.Exist("../..") {
+		t.Error("there should be nothing outside the root")
 	}
 }
 
@@ -111,7 +115,7 @@ func TestFs_IsDir(t *testing.T) {
 	defer os.RemoveAll(root.Root())
 
 	if root.IsDir("foo") {
-		t.Errorf("\"%s\" should not shouldBeExist", "foo")
+		t.Errorf("\"%s\" should not exist", "foo")
 	}
 
 	mkDir(root.Root(), "foo")
@@ -135,7 +139,7 @@ func TestFs_IsFile(t *testing.T) {
 	defer os.RemoveAll(root.Root())
 
 	if root.IsDir("foo.txt") {
-		t.Errorf("\"%s\" should not shouldBeExist", "foo")
+		t.Errorf("\"%s\" should not exist", "foo")
 	}
 
 	mkDir(root.Root(), "foo")
@@ -182,6 +186,17 @@ func TestFs_Dir(t *testing.T) {
 	if _, ok := err.(*ErrNotExist); !ok {
 		t.Error("Should be *ErrNotExist type", err)
 	}
+
+	_, err = root.Dir("../..")
+	if err == nil {
+		t.Error("Should be error")
+		return
+	}
+
+	if _, ok := err.(*ErrNotInRoot); !ok {
+		t.Error("Should be *ErrNotInRoot type", err)
+		return
+	}
 }
 
 func TestFs_File(t *testing.T) {
@@ -208,13 +223,24 @@ func TestFs_File(t *testing.T) {
 		t.Error("Should be *ErrNotFile type", err)
 	}
 
-	_, err = root.Dir("fizz.txt")
+	_, err = root.File("fizz.txt")
 	if err == nil {
 		t.Error("Should be errors")
 	}
 
 	if _, ok := err.(*ErrNotExist); !ok {
 		t.Error("Should be *ErrNotExist type", err)
+	}
+
+	_, err = root.File("../..")
+	if err == nil {
+		t.Error("Should be error")
+		return
+	}
+
+	if _, ok := err.(*ErrNotInRoot); !ok {
+		t.Error("Should be *ErrNotInRoot type", err)
+		return
 	}
 }
 
@@ -232,6 +258,17 @@ func TestFs_Mkdir(t *testing.T) {
 
 	if !root.IsDir("foo") {
 		t.Errorf("\"%s\" should not be directory", "foo")
+	}
+
+	err = root.Mkdir("../../foo")
+	if err == nil {
+		t.Error("Should be error")
+		return
+	}
+
+	if _, ok := err.(*ErrNotInRoot); !ok {
+		t.Error("Should be *ErrNotInRoot type", err)
+		return
 	}
 }
 
@@ -255,7 +292,7 @@ func TestFs_Remove(t *testing.T) {
 	}
 
 	if root.Exist("foo"); err != nil {
-		t.Errorf("\"%s\" should not shouldBeExist", "foo")
+		t.Errorf("\"%s\" should not exist", "foo")
 	}
 
 	if err := root.Remove("bar.txt"); err != nil {
@@ -263,7 +300,7 @@ func TestFs_Remove(t *testing.T) {
 	}
 
 	if root.Exist("bar.txt"); err != nil {
-		t.Errorf("\"%s\" should not shouldBeExist", "bar.txt")
+		t.Errorf("\"%s\" should not exist", "bar.txt")
 	}
 
 	err = root.Remove("bar.txt")

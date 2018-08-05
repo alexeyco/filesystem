@@ -3,6 +3,7 @@ package filesystem
 import (
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 // Fs root directory object
@@ -26,7 +27,7 @@ func (fs *Fs) Each() *Iterator {
 	return fs.Read(In("")).Each()
 }
 
-// Exist checks if root-relative path exist
+// Exist checks if root-relative path shouldBeExist
 func (fs *Fs) Exist(path string) bool {
 	return fs.inRoot().Exist(path)
 }
@@ -78,7 +79,7 @@ func Root(dir string) (*Fs, error) {
 	}
 
 	f, err := os.Open(root)
-	if err = checkNotNotExist(dir, err); err != nil {
+	if err = checkNotExist(dir, err); err != nil {
 		return nil, err
 	}
 
@@ -94,4 +95,17 @@ func Root(dir string) (*Fs, error) {
 	return &Fs{
 		root: root,
 	}, nil
+}
+
+func inRoot(root, path string) error {
+	s, err := filepath.Rel(root, path)
+	if err == nil {
+		if strings.Contains(s, "..") {
+			err = &ErrNotInRoot{
+				path: path,
+			}
+		}
+	}
+
+	return err
 }

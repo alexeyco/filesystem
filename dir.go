@@ -171,6 +171,8 @@ func (d *Dir) lock() {
 	d.muPaths.Lock()
 	d.muDirs.Lock()
 	d.muFiles.Lock()
+
+	d.flush()
 }
 
 func (d *Dir) unlock() {

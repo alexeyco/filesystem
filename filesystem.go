@@ -100,7 +100,7 @@ func Root(dir string) (*Fs, error) {
 func inRoot(root, path string) error {
 	s, err := filepath.Rel(root, path)
 	if err == nil {
-		if strings.Contains(s, "..") {
+		if s == "." || strings.Contains(s, "..") {
 			err = &ErrNotInRoot{
 				path: path,
 			}

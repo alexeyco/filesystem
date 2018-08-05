@@ -6,25 +6,30 @@ import (
 	"path/filepath"
 )
 
+// SeekerIn basic seeker
 type SeekerIn struct {
 	root string
 	dir  string
 }
 
+// Root returns seeker root
 func (s *SeekerIn) Root() string {
 	return filepath.Join(s.root, s.dir)
 }
 
+// Each returns iterator
 func (s *SeekerIn) Each() *Iterator {
 	return &Iterator{
 		seeker: s,
 	}
 }
 
+// SetRoot sets seeker root (relative to Fs root)
 func (s *SeekerIn) SetRoot(root string) {
 	s.root = root
 }
 
+// Exist checks if file exist
 func (s *SeekerIn) Exist(path string) bool {
 	_, err := s.entry(path)
 	if err != nil {

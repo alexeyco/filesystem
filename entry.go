@@ -1,7 +1,6 @@
 package filesystem
 
 import (
-	"fmt"
 	"os"
 )
 
@@ -19,12 +18,4 @@ func newEntry(name string, info os.FileInfo) Entry {
 	} else {
 		return newFile(name, info)
 	}
-}
-
-type ErrNotExists struct {
-	path string
-}
-
-func (e *ErrNotExists) Error() string {
-	return fmt.Sprintf("in %s not exists", e.path)
 }

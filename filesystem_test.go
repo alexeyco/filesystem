@@ -273,7 +273,84 @@ func TestFs_Mkdir(t *testing.T) {
 }
 
 func TestFs_Move(t *testing.T) {
+	root, err := getTmpRoot()
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	defer os.RemoveAll(root.Root())
 
+	mkDir(root.Root(), "foo/bar/baz")
+	mkFile(root.Root(), "bar")
+	mkFile(root.Root(), "bar.txt")
+
+	if err := root.Move("bar", "foo/bar/baz/bar"); err != nil {
+		t.Error(err)
+	}
+
+	if err := root.Move("bar.txt", "foo/bar/baz/bar.txt"); err != nil {
+		t.Error(err)
+	}
+
+	if root.Exist("bar") {
+		t.Errorf("\"%s\" should not exist", "bar")
+	}
+
+	if root.Exist("bar.txt") {
+		t.Errorf("\"%s\" should not exist", "bar.txt")
+	}
+
+	if !root.Exist("foo/bar/baz/bar") {
+		t.Errorf("\"%s\" should not exist", "foo/bar/baz/bar")
+	}
+
+	if !root.Exist("foo/bar/baz/bar.txt") {
+		t.Errorf("\"%s\" should not exist", "foo/bar/baz/bar.txt")
+	}
+
+	err = root.Move("foo/bar/baz/bar.txt", "foo/bar/baz/bar")
+	if err == nil {
+		t.Error("Should be error")
+		return
+	}
+
+	if _, ok := err.(*ErrAlreadyExist); !ok {
+		t.Error("Should be *ErrAlreadyExist type", err)
+		return
+	}
+
+	err = root.Move("bar", "foo/fizz")
+	if err == nil {
+		t.Error("Should be error")
+		return
+	}
+
+	if _, ok := err.(*ErrNotExist); !ok {
+		t.Error("Should be *ErrNotExist type", err)
+		return
+	}
+
+	err = root.Move("../..", "foo/fizz")
+	if err == nil {
+		t.Error("Should be error")
+		return
+	}
+
+	if _, ok := err.(*ErrNotInRoot); !ok {
+		t.Error("Should be *ErrNotInRoot type", err)
+		return
+	}
+
+	err = root.Move("foo", "../..")
+	if err == nil {
+		t.Error("Should be error")
+		return
+	}
+
+	if _, ok := err.(*ErrNotInRoot); !ok {
+		t.Error("Should be *ErrNotInRoot type", err)
+		return
+	}
 }
 
 func TestFs_Remove(t *testing.T) {
@@ -291,7 +368,7 @@ func TestFs_Remove(t *testing.T) {
 		t.Error(err)
 	}
 
-	if root.Exist("foo"); err != nil {
+	if root.Exist("foo") {
 		t.Errorf("\"%s\" should not exist", "foo")
 	}
 
@@ -299,7 +376,7 @@ func TestFs_Remove(t *testing.T) {
 		t.Error(err)
 	}
 
-	if root.Exist("bar.txt"); err != nil {
+	if root.Exist("bar.txt") {
 		t.Errorf("\"%s\" should not exist", "bar.txt")
 	}
 

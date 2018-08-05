@@ -41,7 +41,42 @@ func TestFiles_Each(t *testing.T) {
 
 // TestFile_Rename checks file rename
 func TestFile_Rename(t *testing.T) {
+	fs, err := getFsTmp()
+	if err != nil {
+		t.Error("Can't create temporary Fs root", err)
+		return
+	}
+	defer os.RemoveAll(fs.Abs())
 
+	mkFile(fs.Abs(), "foo.txt")
+
+	file, err := fs.File("foo.txt")
+	if err != nil {
+		t.Error("Must not be errors", err)
+		return
+	}
+
+	if err := file.Rename("bar.txt"); err != nil {
+		t.Error("Must not be errors", err)
+		return
+	}
+
+	files, err := fs.Files()
+	if err != nil {
+		t.Error("Must not be errors", err)
+		return
+	}
+
+	l := len(files)
+	if l != 1 {
+		t.Errorf("Must be 1 file, not %d", l)
+		return
+	}
+
+	_, err = fs.File("bar.txt")
+	if err != nil {
+		t.Error("Must not be errors", err)
+	}
 }
 
 // TestFile_Move checks file move

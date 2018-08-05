@@ -38,3 +38,18 @@ func TestDirs_Each(t *testing.T) {
 		}
 	})
 }
+
+// TestDir_Rename checks directory rename
+func TestDir_Rename(t *testing.T) {
+
+}
+
+// TestDir_Move checks directory move
+func TestDir_Move(t *testing.T) {
+
+}
+
+// TestDir_Remove checks directory remove
+func TestDir_Remove(t *testing.T) {
+
+}

@@ -2,6 +2,8 @@ package filesystem
 
 import (
 	"fmt"
+	"io"
+	"os"
 	"path/filepath"
 	"sync"
 )
@@ -58,18 +60,64 @@ func (d *Dir) abs() string {
 }
 
 // Rename renames current directory
-func (*Dir) Rename(name string) error {
+func (d *Dir) Rename(name string) error {
+	d.lock()
+	defer d.unlock()
+
+	return d.rename(name)
+}
+
+func (d *Dir) rename(name string) error {
+	dest := filepath.Join(d.Parent().abs(), name)
+	if err := copyAll(d.abs(), dest); err != nil {
+		return err
+	}
+
+	if err := d.remove(); err != nil {
+		return err
+	}
+
+	d.name = name
+	d.path = filepath.Join(d.Parent().Path(), name)
+	d.Parent().flush()
+
 	return nil
 }
 
 // Move moves directory with all contents to destination directory
-func (*Dir) Move(dir *Dir) error {
+func (d *Dir) Move(dir *Dir) error {
+	d.lock()
+	defer d.unlock()
+
+	return d.move(dir)
+}
+
+func (d *Dir) move(dir *Dir) error {
+	dest := filepath.Join(dir.abs(), d.name)
+	if err := copyAll(d.abs(), dest); err != nil {
+		return err
+	}
+
+	if err := d.remove(); err != nil {
+		return err
+	}
+
+	dir.flush()
+	d.Parent().flush()
+
+	d.parent = dir
+	d.path = dest
+
 	return nil
 }
 
 // Remove removes current directory with all contents
-func (*Dir) Remove() error {
-	return nil
+func (d *Dir) Remove() error {
+	return d.remove()
+}
+
+func (d *Dir) remove() error {
+	return os.RemoveAll(d.abs())
 }
 
 // List returns all directory nested contents
@@ -243,4 +291,61 @@ func newDir(fs *Fs, parent *Dir, local string) *Dir {
 		name:   local,
 		path:   path,
 	}
+}
+
+func copyAll(source, dest string) error {
+	info, err := os.Stat(source)
+	if err != nil {
+		return err
+	}
+
+	err = os.MkdirAll(dest, info.Mode())
+	if err != nil {
+		return err
+	}
+
+	directory, _ := os.Open(source)
+
+	objects, err := directory.Readdir(-1)
+
+	for _, obj := range objects {
+		s := filepath.Join(source, obj.Name())
+		d := filepath.Join(dest, obj.Name())
+
+		if obj.IsDir() {
+			err = copyAll(s, d)
+		} else {
+			err = copyFile(s, d)
+		}
+
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func copyFile(source, dest string) error {
+	s, err := os.Open(source)
+	if err != nil {
+		return err
+	}
+	defer s.Close()
+
+	d, err := os.Create(dest)
+	if err != nil {
+		return err
+	}
+	defer d.Close()
+
+	_, err = io.Copy(d, s)
+	if err == nil {
+		info, err := os.Stat(source)
+		if err != nil {
+			err = os.Chmod(dest, info.Mode())
+		}
+	}
+
+	return err
 }

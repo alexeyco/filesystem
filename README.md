@@ -6,6 +6,93 @@
 [![GoDoc](https://godoc.org/github.com/alexeyco/filesystem?status.svg)](https://godoc.org/github.com/alexeyco/filesystem)
 [![license](https://img.shields.io/github/license/alexeyco/filesystem.svg)](https://github.com/alexeyco/filesystem)
 
+**Work in progress!**
+
+1. [Filesystem manipulations](#filesystem-manipulations)
+    1. [List directory contents](#list-directory-contents)
+    1. [Check path](#check-path)
+    1. [Path info](#path-info)
+    1. [Create directories](#create-directories)
+    1. [Rename](#move/rename)
+    1. [Remove](#remove)
+1. Seekers
+1. [License](#license)
+
+## Filesystem manipulations
+```go
+root, err := filesystem.Root("/path/to/root/directory")
+if err != nil {
+    log.Fatalln(err)
+}
+```
+
+### List directory contents
+Directories:
+```go
+err := root.Each().Dir(func(dir *filesystem.Dir) {
+    fmt.Println("Dir:  ", dir.Name())
+})
+```
+
+Files:
+```go
+err = root.Each().File(func(file *filesystem.File) {
+    fmt.Println("File: ", file.Name())
+})
+```
+
+Anything:
+```go
+err = root.Each().Entry(func(entry filesystem.Entry) {
+    fmt.Println("Entry: ", entry.Name())
+})
+```
+
+### Check path
+Check path exists:
+```go
+exist := root.Exist("path/to/file")
+```
+
+Check path is a directory:
+```go
+exist := root.IsDir("path/to/directory")
+```
+
+Check path is a file:
+```go
+exist := root.IsFile("path/to/file")
+```
+
+### Path info
+Get directory:
+```go
+dir, err := root.Dir("path/to/dir")
+```
+
+Get file:
+```go
+file, err := root.Dir("path/to/file")
+```
+
+### Create directories
+Create directory:
+```go
+err := root.Mkdir("path/to/directory")
+```
+
+### Move/rename
+Rename files and directories:
+```go
+err := root.Move("path/to/source", "path/to/dest")
+```
+
+### Remove
+Remove files and directories:
+```go
+err := root.Move("path/to/source", "path/to/dest")
+```
+
 ## License
 
 ```

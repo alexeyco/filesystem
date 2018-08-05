@@ -2,7 +2,6 @@ package filesystem
 
 import (
 	"io/ioutil"
-	"log"
 )
 
 // Path basic filesystem item
@@ -62,7 +61,7 @@ func (p Paths) Each(handler HandlerEachPath) {
 func newPaths(dir *Dir) (Paths, error) {
 	paths, err := ioutil.ReadDir(dir.abs())
 	if err != nil {
-		log.Fatal(err)
+		return Paths{}, err
 	}
 
 	p := Paths{}

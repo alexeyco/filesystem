@@ -2,6 +2,7 @@ package filesystem
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 )
 
@@ -43,18 +44,45 @@ func (f *File) abs() string {
 }
 
 // Rename renames current file
-func (*File) Rename(name string) error {
-	return nil
+func (f *File) Rename(name string) error {
+	p := f.Parent()
+
+	p.lock()
+	defer p.unlock()
+
+	oldName := f.abs()
+	newName := filepath.Join(p.abs(), name)
+
+	err := os.Rename(oldName, newName)
+	if err != nil {
+		f.name = name
+		f.path = filepath.Join(f.Parent().Path(), name)
+	}
+
+	return err
 }
 
 // Move moves current file to destination directory
-func (*File) Move(dir *Dir) error {
+func (f *File) Move(dir *Dir) error {
+	p := f.Parent()
+
+	p.lock()
+	dir.lock()
+
+	defer p.unlock()
+	defer dir.unlock()
+
 	return nil
 }
 
 // Remove removes current file
-func (*File) Remove() error {
-	return nil
+func (f *File) Remove() error {
+	p := f.Parent()
+
+	p.lock()
+	defer p.unlock()
+
+	return os.RemoveAll(f.abs())
 }
 
 // ErrFileNotFound file not found

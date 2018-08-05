@@ -31,7 +31,7 @@ func (s *SourceIn) setFs(fs *Fs) {
 }
 
 func (s *SourceIn) exists(path string) bool {
-	_, err := s.open(filepath.Join(s.in, path))
+	_, err := s.open(path)
 	return err == nil
 }
 
@@ -51,7 +51,7 @@ func (s *SourceIn) entry(path string) (Entry, error) {
 }
 
 func (s *SourceIn) isDir(path string) bool {
-	info, err := s.open(filepath.Join(s.in, path))
+	info, err := s.open(path)
 	if err != nil {
 		return false
 	}
@@ -60,7 +60,7 @@ func (s *SourceIn) isDir(path string) bool {
 }
 
 func (s *SourceIn) isFile(path string) bool {
-	info, err := s.open(filepath.Join(s.in, path))
+	info, err := s.open(path)
 	if err != nil {
 		return false
 	}
@@ -91,10 +91,13 @@ func (s *SourceIn) entries() ([]Entry, error) {
 }
 
 func (s *SourceIn) open(path string) (os.FileInfo, error) {
-	f, err := os.Open(filepath.Join(s.fs.root, path))
-	if err == nil {
+	path = filepath.Join(s.fs.root, s.in, path)
+
+	f, err := os.Open(path)
+	if err != nil {
 		return nil, err
 	}
+	defer f.Close()
 
 	return f.Stat()
 }

@@ -1,13 +1,16 @@
 package filesystem
 
-import "fmt"
+import (
+	"fmt"
+	"os"
+)
 
-type ErrNotExists struct {
+type ErrNotExist struct {
 	path string
 }
 
-func (e *ErrNotExists) Error() string {
-	return fmt.Sprintf("in %s not exists", e.path)
+func (e *ErrNotExist) Error() string {
+	return fmt.Sprintf("path %s not exist", e.path)
 }
 
 type ErrNotDir struct {
@@ -24,4 +27,18 @@ type ErrNotFile struct {
 
 func (e *ErrNotFile) Error() string {
 	return fmt.Sprintf("path %s is not a file", e.path)
+}
+
+func checkNotNotExist(path string, err error) error {
+	if err == nil {
+		return nil
+	}
+
+	if os.IsNotExist(err) {
+		return &ErrNotExist{
+			path: path,
+		}
+	}
+
+	return err
 }

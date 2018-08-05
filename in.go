@@ -103,7 +103,7 @@ func (s *SeekerIn) entry(path string) (Entry, error) {
 	}
 
 	f, err := os.Open(path)
-	if checkNotNotExist(local, err) != nil {
+	if err = checkNotNotExist(local, err); err != nil {
 		return nil, err
 	}
 
@@ -143,18 +143,4 @@ func In(dir string) Seeker {
 	return &SeekerIn{
 		dir: dir,
 	}
-}
-
-func checkNotNotExist(path string, err error) error {
-	if err == nil {
-		return nil
-	}
-
-	if os.IsNotExist(err) {
-		return &ErrNotExists{
-			path: path,
-		}
-	}
-
-	return err
 }

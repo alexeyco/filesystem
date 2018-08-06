@@ -11,6 +11,7 @@
 1. [Install](#install)
 1. [Filesystem manipulations](#filesystem-manipulations)
     1. [List directory contents](#list-directory-contents)
+    1. [Deep inside directories](#deep-inside-directories)
     1. [Check path](#check-path)
     1. [Path info](#path-info)
     1. [Create directories](#create-directories)
@@ -55,6 +56,17 @@ err = root.Each().Entry(func(entry filesystem.Entry) {
 })
 ```
 
+### Deep inside directories
+```go
+err = root.Read(filesystem.Deep()).Each().Entry(func(entry filesystem.Entry) {
+    if entry.IsDir() {
+        fmt.Println("Dir:  ", entry.Name())
+    } else {
+        fmt.Println("File: ", entry.Name())
+    }
+})
+```
+
 ### Check path
 Check path exists:
 ```go
@@ -85,19 +97,19 @@ file, err := root.Dir("path/to/file")
 ### Create directories
 Create directory:
 ```go
-err := root.Mkdir("path/to/directory")
+err = root.Mkdir("path/to/directory")
 ```
 
 ### Move/rename
 Rename files and directories:
 ```go
-err := root.Move("path/to/source", "path/to/dest")
+err = root.Move("path/to/source", "path/to/dest")
 ```
 
 ### Remove
 Remove files and directories:
 ```go
-err := root.Move("path/to/source", "path/to/dest")
+err = root.Move("path/to/source", "path/to/dest")
 ```
 
 ## License

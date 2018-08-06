@@ -9,7 +9,7 @@ func (i *Iterator) Entry(handler EachEntryHandler) error {
 }
 
 func (i *Iterator) Dir(handler EachDirHandler) error {
-	return i.seeker.each(func(entry Entry) {
+	return i.Entry(func(entry Entry) {
 		if entry.IsDir() {
 			e, _ := entry.(*Dir)
 			handler(e)
@@ -18,7 +18,7 @@ func (i *Iterator) Dir(handler EachDirHandler) error {
 }
 
 func (i *Iterator) File(handler EachFileHandler) error {
-	return i.seeker.each(func(entry Entry) {
+	return i.Entry(func(entry Entry) {
 		if entry.IsFile() {
 			f, _ := entry.(*File)
 			handler(f)

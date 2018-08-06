@@ -33,6 +33,10 @@ func TestIterator(t *testing.T) {
 
 	err = root.Each().File(func(file *File) {
 		files++
+
+		if file.Stat().IsDir() {
+			t.Errorf("file \"%s\" should not be directory", file.Name())
+		}
 	})
 
 	if err != nil {

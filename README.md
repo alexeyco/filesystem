@@ -8,6 +8,7 @@
 
 **Work in progress!**
 
+1. [Install](#install)
 1. [Filesystem manipulations](#filesystem-manipulations)
     1. [List directory contents](#list-directory-contents)
     1. [Check path](#check-path)
@@ -17,6 +18,12 @@
     1. [Remove](#remove)
 1. Seekers
 1. [License](#license)
+
+## Install
+
+```
+$ go get -u github.com/alexeyco/filesystem
+```
 
 ## Filesystem manipulations
 ```go

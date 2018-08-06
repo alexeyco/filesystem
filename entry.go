@@ -4,8 +4,10 @@ import (
 	"os"
 )
 
+// EachEntryHandler files iteration handler
 type EachEntryHandler func(entry Entry)
 
+// Entry basic filesystem object
 type Entry interface {
 	IsDir() bool
 	IsFile() bool
@@ -15,7 +17,7 @@ type Entry interface {
 func newEntry(name string, info os.FileInfo) Entry {
 	if info.IsDir() {
 		return newDir(name, info)
-	} else {
-		return newFile(name, info)
 	}
+
+	return newFile(name, info)
 }

@@ -39,6 +39,7 @@ func (s *SeekerIn) Exist(path string) bool {
 	return true
 }
 
+// IsDir checks if path is directory
 func (s *SeekerIn) IsDir(path string) bool {
 	entry, err := s.entry(path)
 	if err != nil {
@@ -48,6 +49,7 @@ func (s *SeekerIn) IsDir(path string) bool {
 	return entry.IsDir()
 }
 
+// IsFile checks if path is file
 func (s *SeekerIn) IsFile(path string) bool {
 	entry, err := s.entry(path)
 	if err != nil {
@@ -57,6 +59,7 @@ func (s *SeekerIn) IsFile(path string) bool {
 	return entry.IsFile()
 }
 
+// Dir returns directory by path
 func (s *SeekerIn) Dir(path string) (*Dir, error) {
 	entry, err := s.entry(path)
 	if err != nil {
@@ -70,6 +73,7 @@ func (s *SeekerIn) Dir(path string) (*Dir, error) {
 	return entry.(*Dir), nil
 }
 
+// File returns file by path
 func (s *SeekerIn) File(path string) (*File, error) {
 	entry, err := s.entry(path)
 	if err != nil {
@@ -83,6 +87,7 @@ func (s *SeekerIn) File(path string) (*File, error) {
 	return entry.(*File), nil
 }
 
+// Mkdir creates directory
 func (s *SeekerIn) Mkdir(path string) error {
 	if err := s.shouldNotBeExist(path); err != nil {
 		return err
@@ -91,6 +96,7 @@ func (s *SeekerIn) Mkdir(path string) error {
 	return os.MkdirAll(filepath.Join(s.root, s.dir, path), os.ModePerm)
 }
 
+// Move moves files and directories
 func (s *SeekerIn) Move(source, dest string) error {
 	if err := s.shouldBeExist(source); err != nil {
 		return err
@@ -103,6 +109,7 @@ func (s *SeekerIn) Move(source, dest string) error {
 	return os.Rename(filepath.Join(s.dir, s.root, source), filepath.Join(s.dir, s.root, dest))
 }
 
+// Remove removes files and directories
 func (s *SeekerIn) Remove(path string) error {
 	if err := s.shouldBeExist(path); err != nil {
 		return err
@@ -189,6 +196,7 @@ func (s *SeekerIn) stripPath(path string) (string, error) {
 	return filepath.Rel(s.root, path)
 }
 
+// In returns SeekerIn
 func In(dir string) Seeker {
 	return &SeekerIn{
 		dir: dir,

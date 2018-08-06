@@ -5,25 +5,31 @@ import (
 	"path/filepath"
 )
 
+// EachFileHandler file iteration handler
 type EachFileHandler func(file *File)
 
+// File file type
 type File struct {
 	name string
 	info os.FileInfo
 }
 
+// IsDir always false
 func (*File) IsDir() bool {
 	return false
 }
 
+// IsFile always true
 func (*File) IsFile() bool {
 	return true
 }
 
+// Name returns file name
 func (f *File) Name() string {
 	return f.name
 }
 
+// Stat returns file info
 func (f *File) Stat() os.FileInfo {
 	return f.info
 }

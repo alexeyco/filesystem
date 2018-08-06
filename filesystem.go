@@ -27,7 +27,7 @@ func (fs *Fs) Each() *Iterator {
 	return fs.Read(In("")).Each()
 }
 
-// Exist checks if root-relative path shouldBeExist
+// Exist checks if root-relative path exist
 func (fs *Fs) Exist(path string) bool {
 	return fs.inRoot().Exist(path)
 }

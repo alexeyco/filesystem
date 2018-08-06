@@ -1,5 +1,6 @@
 package filesystem
 
+// Seeker file seeker interface
 type Seeker interface {
 	SetRoot(string)
 	Root() string

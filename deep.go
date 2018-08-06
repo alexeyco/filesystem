@@ -1,9 +1,9 @@
 package filesystem
 
 import (
-	"path/filepath"
 	"os"
-		)
+	"path/filepath"
+)
 
 type SeekerDeep struct {
 	*SeekerIn

@@ -29,6 +29,11 @@ func (f *File) Name() string {
 	return f.name
 }
 
+// Ext returns file extension
+func (f *File) Ext() string {
+	return filepath.Ext(f.Name())
+}
+
 // Stat returns file info
 func (f *File) Stat() os.FileInfo {
 	return f.info

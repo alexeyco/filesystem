@@ -12,6 +12,7 @@ type Entry interface {
 	IsDir() bool
 	IsFile() bool
 	Name() string
+	Stat() os.FileInfo
 }
 
 func newEntry(name string, info os.FileInfo) Entry {

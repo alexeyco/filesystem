@@ -35,6 +35,10 @@ func TestSeekerDeep_Each(t *testing.T) {
 		dirs++
 	})
 
+	if err != nil {
+		t.Error(err)
+	}
+
 	if dirs != 3 {
 		t.Errorf("Should be %d directories, not %d", 3, dirs)
 	}

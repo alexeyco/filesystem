@@ -12,7 +12,7 @@ type ErrAlreadyExist struct {
 
 // Error returns error string
 func (e *ErrAlreadyExist) Error() string {
-	return fmt.Sprintf("path %s already shouldBeExist", e.path)
+	return fmt.Sprintf("path %s already exist", e.path)
 }
 
 // ErrNotExist path is not exist
@@ -22,7 +22,7 @@ type ErrNotExist struct {
 
 // Error returns error string
 func (e *ErrNotExist) Error() string {
-	return fmt.Sprintf("path %s not shouldBeExist", e.path)
+	return fmt.Sprintf("path %s not exist", e.path)
 }
 
 // ErrNotDir path is not directory

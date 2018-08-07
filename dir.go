@@ -29,6 +29,11 @@ func (d *Dir) Name() string {
 	return d.name
 }
 
+// Stat returns directory info
+func (d *Dir) Stat() os.FileInfo {
+	return d.info
+}
+
 func newDir(path string, info os.FileInfo) *Dir {
 	return &Dir{
 		name: filepath.Join(path, info.Name()),
